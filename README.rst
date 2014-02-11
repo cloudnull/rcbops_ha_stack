@@ -1,5 +1,5 @@
-Openstack HA in a couple of Boxes
-#################################
+RCBOPS HA Stack in a Box
+########################
 :date: 2013-11-06 09:51
 :tags: rackspace, openstack, private cloud, development, chef, cookbooks
 :category: \*nix
@@ -77,7 +77,7 @@ The name of the network to be used with neutron
 
 Execute the script::
 
-  curl https://raw.github.com/cloudnull/rcbops_openstack_ha/master/rcbops_openstack_ha.sh | bash
+  curl https://raw.github.com/cloudnull/rcbops_ha_stack/master/rcbops_ha_stack.sh | bash
 
 
 * When you first execute the script, you will be asked for the passwords for all of your nodes you have set in config. These passwords are required to upload an SSH key from controller 1 to all of the boxes in your environment. The uploaded key will be used throughout the bootstrap process.
@@ -122,6 +122,8 @@ NOTES
 * This script presently only supports Ubuntu 12.04, please don't cry if the you attempt to run this and it does not work on RHEL-ish systems.  If you would like to have RHEL support added please create a github issue asking for a feature request, or submit a Pull request with the required changes. Pull requests are welcome!
 * This script was create to allow for rapid deployment of a testing nodes based on the Rackspace Private Cloud Chef Cookbooks.
 * This script assumes that you will be deploying version 4.2.x or later of the Rackspace Private Cloud Software. This has not been tested on earlier versions of the cookbooks.
+* This script will not build networks for you. Thats your job.
+* This script will not upload images that also your job. 
 
 
 Foot Notes
