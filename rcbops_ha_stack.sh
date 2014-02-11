@@ -333,6 +333,7 @@ cat > /opt/base.env.json <<EOF
     },
     "neutron": {
       "ovs": {
+        "external_bridge": ""
         "network_type": "gre",
         "provider_networks": [
           {
