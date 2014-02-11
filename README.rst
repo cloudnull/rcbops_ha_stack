@@ -24,7 +24,7 @@ To begin using the script you have have to have a Linux operating system availab
 
 * When using Ubuntu the stock 3.2 Kernel works out of the box but it may be wise to upgrade to the 3.8 kernel as it's a better code base and has better support for Neutron networking and some hypervisors such as LXC and Docker.  To upgrade to the 3.8 Kernel in Ubuntu please go to the `Raring Kernel in Precise`_ section of this doc and read it.
 
-I have tested this installation on Rackspace Public Cloud, HP Cloud, VMFusion 6, Virtual Box 4.3.x, Amazon Ubuntu 12.04 AMI, Parallels Desktop, and KVM.
+I have tested this installation on Rackspace Public Cloud, HP Cloud, VMFusion 6, Virtual Box 4.3.x, Amazon Ubuntu 12.04 AMI, Desktop, and KVM.
 
 
 How to use The Script
@@ -49,29 +49,44 @@ Set the Variables that you NEED
 
 Here are all of the variables that **NEED** to be set. I recommend that you write these variables to a file and then source the file prior to running the script. While that is my recommendation it is not required you could simply run the following exports into your shell and then execute the script.
 
+NOTICE: I have set my network in the examples provided to be "10.0.0.0" this is just an example, Change these network settings to something that you are using. Other common networks are "192.168.0.0" or "172.16.0.0" you just have to use the right class of network for your installation.
 
-Rabbit Password:
+
+Rabbit Password::
+
   export RMQ_PW="secrete"
 
-Rabbit IP address, this should be an IP address on your management network:
+
+Rabbit IP address, this should be an IP address on your management network::
+
   export RMQ_IP="10.0.0.1"
 
-Set the cookbook version that we will upload to chef:
+
+Set the cookbook version that we will upload to chef::
+
   export COOKBOOK_VERSION="master"
 
-SET THE NODE IP ADDRESSES:
+
+SET THE NODE IP ADDRESSES::
+
   export CONTROLLER1="10.0.0.1"
   export CONTROLLER2="10.0.0.2"
 
-ADD ALL OF THE COMPUTE NODE IP ADDRESSES, SPACE SEPARATED.
+
+ADD ALL OF THE COMPUTE NODE IP ADDRESSES, SPACE SEPARATED::
+
   export COMPUTE_NODES="10.0.0.3 10.0.0.4"
 
-Set the VIP Prefix. IE: the beginning of your IP Addresses for all your VIPS
+
+Set the VIP Prefix. IE: the beginning of your IP Addresses for all your VIPS::
+
   export VIP_PREFIX="10.0.0"
 
-  NOTICE: This makes a lot of assumptions for your VIPS. The environment uses .154, .155, .156 for your HA VIPS.
+NOTICE: This makes a lot of assumptions for your VIPS. The environment uses .154, .155, .156 for your HA VIPS.
 
-The name of the network to be used with neutron
+
+The name of the network to be used with neutron::
+
   export PROVIDER_NETWORK="eth1"
 
 
@@ -123,7 +138,7 @@ NOTES
 * This script was create to allow for rapid deployment of a testing nodes based on the Rackspace Private Cloud Chef Cookbooks.
 * This script assumes that you will be deploying version 4.2.x or later of the Rackspace Private Cloud Software. This has not been tested on earlier versions of the cookbooks.
 * This script will not build networks for you. Thats your job.
-* This script will not upload images that also your job. 
+* This script will not upload images that also your job.
 
 
 Foot Notes
