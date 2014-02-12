@@ -1,0 +1,19 @@
+# Basic RC script which can be sourced to set all options for a deployment
+
+# Define the nodes
+export CONTROLLER1="10.0.0.1"
+export CONTROLLER2="10.0.0.2"
+
+# Define the compute nodes. Space separated list.
+export COMPUTE_NODES="10.0.0.3 10.0.0.4"
+
+# Define the networks.
+export MANAGEMENT_PREFIX="10.0.0"
+export PUB_PREFIX="10.0.1"
+export NOVA_PREFIX="10.0.2"
+
+# Define what node will become the RabbitMQ node.
+export RMQ_IP="${CONTROLLER1}"
+
+# Define what network will provide for neutron services
+export PROVIDER_NETWORK="eth2"

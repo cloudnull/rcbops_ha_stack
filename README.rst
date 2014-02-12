@@ -80,7 +80,9 @@ ADD ALL OF THE COMPUTE NODE IP ADDRESSES, SPACE SEPARATED::
 
 Set the VIP Prefix. IE: the beginning of your IP Addresses for all your VIPS::
 
-  export VIP_PREFIX="10.0.0"
+  export PUB_PREFIX="10.0.0"
+  export MANAGEMENT_PREFIX="10.0.1"
+  export NOVA_PREFIX="10.0.2"
 
 NOTICE: This makes a lot of assumptions for your VIPS. The environment uses .154, .155, .156 for your HA VIPS.
 

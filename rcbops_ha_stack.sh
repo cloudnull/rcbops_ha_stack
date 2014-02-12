@@ -23,7 +23,7 @@ set -u
 # This is a crude script which will deploy an openstack HA environment
 # YOU have to populate the IP addresses for Controller 1 and 2 as well as
 # The IP addresses for your compute nodes.  Additionally you will need to
-# Populate the VIP_PREFIX with the first three octets of your VIP addresses.
+# Populate the PUB_PREFIX with the first three octets of your VIP addresses.
 # You should run this script on the node designated as controller1.
 
 # This script will build you an environment using the Rackspace Private Cloud
@@ -61,23 +61,25 @@ RMQ_PW=${RMQ_PW:-"Passw0rd"}
 
 # Rabbit IP address, this should be the host ip which is on
 # the same network used by your management network
-RMQ_IP=${RMQ_IP:-"10.51.50.1"}
+RMQ_IP=${RMQ_IP:-"10.0.0.1"}
 
 # Set the cookbook version that we will upload to chef
 COOKBOOK_VERSION=${COOKBOOK_VERSION:-"master"}
 
 # SET THE NODE IP ADDRESSES
-CONTROLLER1=${CONTROLLER1:-"10.51.50.1"}
-CONTROLLER2=${CONTROLLER2:-"10.51.50.2"}
+CONTROLLER1=${CONTROLLER1:-"10.0.0.1"}
+CONTROLLER2=${CONTROLLER2:-"10.0.0.2"}
 
 # ADD ALL OF THE COMPUTE NODE IP ADDRESSES, SPACE SEPARATED.
-COMPUTE_NODES="10.51.50.3 10.51.50.4"
+COMPUTE_NODES=${COMPUTE_NODES:-"10.0.0.3 10.0.0.4"}
 
 # This is the VIP prefix, IE the beginning of your IP addresses for all your VIPS.
-# Note, This makes a lot of assumptions for your VIPS.
-# The environment use .154, .155, .156 for your HA VIPS.
-VIP_PREFIX=${VIP_PREFIX:-"10.51.50"}
+# Note, This makes a lot of assumptions for your PUBLIC_PREFIX. The environment use
+# .154, .155, .156 for your HA VIPS.  All of these can be the same IP address.
 
+PUB_PREFIX=${PUB_PREFIX:-"10.0.0"}
+MANAGEMENT_PREFIX=${MANAGEMENT_PREFIX:-"10.0.1"}
+NOVA_PREFIX=${NOVA_PREFIX:-"10.0.2"}
 
 # The name of the network to be used with neutron
 PROVIDER_NETWORK=${PROVIDER_NETWORK:-"eth2"}
@@ -257,10 +259,10 @@ cat > /opt/base.env.json <<EOF
     },
     "enable_monit": true,
     "osops_networks": {
-      "management": "${VIP_PREFIX}.0/24",
-      "swift": "${VIP_PREFIX}.0/24",
-      "public": "${VIP_PREFIX}.0/24",
-      "nova": "${VIP_PREFIX}.0/24"
+      "management": "${MANAGEMENT_PREFIX}.0/24",
+      "swift": "${MANAGEMENT_PREFIX}.0/24",
+      "public": "${PUB_PREFIX}.0/24",
+      "nova": "${NOVA_PREFIX}.0/24"
     },
     "rabbitmq": {
       "cluster": true,
@@ -333,7 +335,7 @@ cat > /opt/base.env.json <<EOF
     },
     "neutron": {
       "ovs": {
-        "external_bridge": ""
+        "external_bridge": "",
         "network_type": "gre",
         "provider_networks": [
           {
@@ -361,47 +363,42 @@ cat > /opt/base.env.json <<EOF
       "root_network_acl": "127.0.0.1"
     },
     "vips": {
-      "horizon-dash": "${VIP_PREFIX}.156",
-      "keystone-service-api": "${VIP_PREFIX}.156",
-      "nova-xvpvnc-proxy": "${VIP_PREFIX}.156",
-      "nova-api": "${VIP_PREFIX}.156",
-      "cinder-api": "${VIP_PREFIX}.156",
-      "nova-ec2-public": "${VIP_PREFIX}.156",
+      "horizon-dash": "${PUB_PREFIX}.156",
+      "keystone-service-api": "${PUB_PREFIX}.156",
+      "nova-xvpvnc-proxy": "${PUB_PREFIX}.156",
+      "nova-api": "${PUB_PREFIX}.156",
+      "cinder-api": "${PUB_PREFIX}.156",
+      "nova-ec2-public": "${PUB_PREFIX}.156",
       "config": {
-        "${VIP_PREFIX}.156": {
+        "${PUB_PREFIX}.156": {
           "vrid": 12,
           "network": "public"
         },
-        "${VIP_PREFIX}.154": {
+        "${PUB_PREFIX}.154": {
           "vrid": 10,
           "network": "public"
         },
-        "${VIP_PREFIX}.155": {
+        "${PUB_PREFIX}.155": {
           "vrid": 11,
           "network": "public"
         }
       },
-      "rabbitmq-queue": "${VIP_PREFIX}.155",
-      "nova-novnc-proxy": "${VIP_PREFIX}.156",
-      "mysql-db": "${VIP_PREFIX}.154",
-      "glance-api": "${VIP_PREFIX}.156",
-      "keystone-internal-api": "${VIP_PREFIX}.156",
-      "horizon-dash_ssl": "${VIP_PREFIX}.156",
-      "glance-registry": "${VIP_PREFIX}.156",
-      "neutron-api": "${VIP_PREFIX}.156",
-      "ceilometer-api": "${VIP_PREFIX}.156",
-      "ceilometer-central-agent": "${VIP_PREFIX}.156",
-      "heat-api": "${VIP_PREFIX}.156",
-      "heat-api-cfn": "${VIP_PREFIX}.156",
-      "heat-api-cloudwatch": "${VIP_PREFIX}.156",
-      "keystone-admin-api": "${VIP_PREFIX}.156"
+      "rabbitmq-queue": "${PUB_PREFIX}.155",
+      "nova-novnc-proxy": "${PUB_PREFIX}.156",
+      "mysql-db": "${PUB_PREFIX}.154",
+      "glance-api": "${PUB_PREFIX}.156",
+      "keystone-internal-api": "${PUB_PREFIX}.156",
+      "horizon-dash_ssl": "${PUB_PREFIX}.156",
+      "glance-registry": "${PUB_PREFIX}.156",
+      "neutron-api": "${PUB_PREFIX}.156",
+      "ceilometer-api": "${PUB_PREFIX}.156",
+      "ceilometer-central-agent": "${PUB_PREFIX}.156",
+      "heat-api": "${PUB_PREFIX}.156",
+      "heat-api-cfn": "${PUB_PREFIX}.156",
+      "heat-api-cloudwatch": "${PUB_PREFIX}.156",
+      "keystone-admin-api": "${PUB_PREFIX}.156"
     },
     "glance": {
-      "images": [
-
-      ],
-      "image": {
-      },
       "image_upload": false
     },
     "osops": {
