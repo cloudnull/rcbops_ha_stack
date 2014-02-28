@@ -84,6 +84,10 @@ NOVA_PREFIX=${NOVA_PREFIX:-"10.0.2"}
 # The name of the network to be used with neutron
 PROVIDER_NETWORK=${PROVIDER_NETWORK:-"eth2"}
 
+RABBIT_URL="http://www.rabbitmq.com"
+RABBIT_RELEASE="${RABBIT_URL}/releases/rabbitmq-server"
+IPTABLES_SAVE=${IPTABLES_SAVE:-"$(which iptables-save)"}
+IPTABLES=${IPTABLES:-"$(which iptables)"}
 
 # Make the system key used for bootstrapping self and others.
 if [ ! -f "/root/.ssh/id_rsa" ];then
@@ -93,15 +97,92 @@ if [ ! -f "/root/.ssh/id_rsa" ];then
     popd
 fi
 
+
 # Send your key out to all of your nodes.
 for node in ${CONTROLLER1} ${CONTROLLER2} ${COMPUTE_NODES};do
     ssh-copy-id ${node}
 done
 
-apt-get update
-apt-get install -y python-dev python-pip git erlang erlang-nox erlang-dev curl lvm2
-pip install git+https://github.com/cloudnull/mungerator
-RABBIT_URL="http://www.rabbitmq.com"
+
+# OS Check
+if [ "$(grep -i -e redhat -e centos /etc/redhat-release)"  ]; then
+  PACKAGE_INSTALL=install_yum_packages
+elif [ "$(grep -i ubuntu /etc/lsb-release)" ];then
+  PACKAGE_INSTALL=install_apt_packages
+else
+  echo "This is not a supported OS, So this script will not work."
+  exit 1
+fi
+
+
+function install_yum_packages() {
+  # Install BASE Packages
+  yum -y install git lvm2
+
+  if [ "${IPTABLES_SAVE}" ];then
+    ${IPTABLES_SAVE} > /etc/iptables.original
+  fi
+
+  if [ "${IPTABLES}" ];then
+    ${IPTABLES} -I INPUT -m tcp -p tcp --dport 443 -j ACCEPT
+    ${IPTABLES} -I INPUT -m tcp -p tcp --dport 80 -j ACCEPT
+    ${IPTABLES} -I INPUT -m tcp -p tcp --dport 4000 -j ACCEPT
+    service iptables save
+  fi
+
+  # Install ERLANG
+  pushd /tmp
+  set +e
+  wget http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+  wget http://rpms.famillecollet.com/enterprise/remi-release-6.rpm
+  rpm -Uvh remi-release-6*.rpm epel-release-6*.rpm
+  set -e
+  popd
+  yum -y install erlang
+
+  # Install RabbitMQ
+  RABBITMQ_KEY="${RABBIT_URL}/rabbitmq-signing-key-public.asc"
+  rpm --import ${RABBITMQ_KEY}
+
+  RABBITMQ="${RABBIT_RELEASE}/v3.1.5/rabbitmq-server-3.1.5-1.noarch.rpm"
+  wget -O /tmp/rabbitmq.rpm ${RABBITMQ}
+  rpm -Uvh /tmp/rabbitmq.rpm
+  chkconfig rabbitmq-server on
+  /sbin/service rabbitmq-server start
+
+  # Setup shared RabbitMQ
+  rabbit_setup
+
+  # Download/Install Chef
+  CHEF="https://www.opscode.com/chef/download-server?p=el&pv=6&m=x86_64"
+  CHEF_SERVER_PACKAGE_URL=${CHEF_SERVER_PACKAGE_URL:-$CHEF}
+  wget -O /tmp/chef_server.rpm ${CHEF_SERVER_PACKAGE_URL}
+  yum install -y /tmp/chef_server.rpm
+}
+
+
+function install_apt_packages() {
+  # Install RabbitMQ Repo
+  RABBITMQ_KEY="${RABBIT_URL}/rabbitmq-signing-key-public.asc"
+  wget -O /tmp/rabbitmq.asc ${RABBITMQ_KEY}
+  apt-key add /tmp/rabbitmq.asc
+
+  RABBITMQ="${RABBIT_RELEASE}/v3.1.5/rabbitmq-server_3.1.5-1_all.deb"
+  wget -O /tmp/rabbitmq.deb ${RABBITMQ}
+  # Install Packages
+  apt-get update && apt-get install -y git curl lvm2 erlang erlang-nox
+  dpkg -i /tmp/rabbitmq.deb
+
+  # Setup shared RabbitMQ
+  rabbit_setup
+
+  # Download/Install Chef
+  CHEF="https://www.opscode.com/chef/download-server?p=ubuntu&pv=12.04&m=x86_64"
+  CHEF_SERVER_PACKAGE_URL=${CHEF_SERVER_PACKAGE_URL:-$CHEF}
+  wget -O /tmp/chef_server.deb ${CHEF_SERVER_PACKAGE_URL}
+  dpkg -i /tmp/chef_server.deb
+}
+
 
 function rabbit_setup() {
     if [ ! "$(rabbitmqctl list_vhosts | grep -w '/chef')" ];then
@@ -116,20 +197,6 @@ function rabbit_setup() {
     rabbitmqctl set_permissions -p /chef chef '.*' '.*' '.*'
 }
 
-function install_apt_packages() {
-    RABBITMQ_KEY="${RABBIT_URL}/rabbitmq-signing-key-public.asc"
-    wget -O /tmp/rabbitmq.asc ${RABBITMQ_KEY};
-    apt-key add /tmp/rabbitmq.asc
-    RABBITMQ="${RABBIT_URL}/releases/rabbitmq-server/v3.1.5/rabbitmq-server_3.1.5-1_all.deb"
-    wget -O /tmp/rabbitmq.deb ${RABBITMQ}
-    dpkg -i /tmp/rabbitmq.deb
-    rabbit_setup
-
-    CHEF="https://www.opscode.com/chef/download-server?p=ubuntu&pv=12.04&m=x86_64"
-    CHEF_SERVER_PACKAGE_URL=${CHEF}
-    wget -O /tmp/chef_server.deb ${CHEF_SERVER_PACKAGE_URL}
-    dpkg -i /tmp/chef_server.deb
-}
 
 function CREATE_SWAP() {
 
@@ -165,7 +232,8 @@ EOF
 }
 
 CREATE_SWAP
-install_apt_packages
+
+${PACKAGE_INSTALL}
 
 mkdir -p /etc/chef-server
 cat > /etc/chef-server/chef-server.rb <<EOF
@@ -430,3 +498,4 @@ ssh root@${CONTROLLER1} "chef-client"
 ssh root@${CONTROLLER2} "chef-client"
 
 echo "All Done!"
+
