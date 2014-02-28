@@ -8,12 +8,13 @@ export CONTROLLER2="10.0.0.2"
 export COMPUTE_NODES="10.0.0.3 10.0.0.4"
 
 # Define the networks.
-export MANAGEMENT_PREFIX="10.0.0"
-export PUB_PREFIX="10.0.1"
-export NOVA_PREFIX="10.0.2"
+export MANAGEMENT_PREFIX="10.0.1"
+export PUB_PREFIX="10.0.2"
+export NOVA_PREFIX="10.0.3"
 
 # Define what node will become the RabbitMQ node.
-export RMQ_IP="${CONTROLLER1}"
+# This should be an IP address on the "MANAGEMENT_PREFIX"
+export RMQ_IP="10.0.1.2"
 
 # Define what network will provide for neutron services
 export PROVIDER_NETWORK="eth2"
